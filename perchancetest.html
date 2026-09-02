@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perchance Tekst Generator API</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 500px; margin: 50px auto; text-align: center; padding: 20px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 4px; }
+        button:disabled { background-color: #ccc; }
+        #output { margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9; min-height: 40px; font-size: 18px; }
+    </style>
+</head>
+<body>
+
+    <h1>Perchance API Test</h1>
+    <p>Haalt live de logica op van de 'animal-sentence' generator.</p>
+
+    <button id="genereerKnop" onclick="genereerTekst()" disabled>Laden van Perchance...</button>
+    <div id="output">De tekst verschijnt hier...</div>
+
+    <script>
+        // De naam van de generator die je wilt gebruiken op perchance.org
+        const generatorNaam = "animal-sentence"; 
+        
+        // We gebruiken een gratis CORS proxy om de Perchance beveiliging in de browser te omzeilen
+        const proxyUrl = "https://corsproxy.io?";
+        const perchanceUrl = `https://perchance.org/api/downloadGenerator?generatorName=${generatorNaam}`;
+
+        let generatorIframe = null;
+
+        // Stap 1: Haal de generatorcode op zodra de pagina laadt
+        async function laadGenerator() {
+            try {
+                const response = await fetch(proxyUrl + encodeURIComponent(perchanceUrl));
+                const htmlCode = await response.text();
+
+                // Stap 2: We stoppen de gedownloade code in een onzichtbaar iframe.
+                // Dit zorgt ervoor dat de scripts van Perchance veilig kunnen draaien.
+                generatorIframe = document.createElement('iframe');
+                generatorIframe.style.display = 'none';
+                document.body.appendChild(generatorIframe);
+
+                const iframeDoc = generatorIframe.contentWindow.document;
+                iframeDoc.open();
+                iframeDoc.write(htmlCode);
+                iframeDoc.close();
+
+                // Activeer de knop zodra de generator in de achtergrond klaarstaat
+                document.getElementById('genereerKnop').disabled = false;
+                document.getElementById('genereerKnop').innerText = "🎲 Genereer Tekst";
+                document.getElementById('output').innerText = "Klaar voor gebruik!";
+
+            } catch (error) {
+                console.error("Fout bij laden:", error);
+                document.getElementById('output').innerText = "Kon de generator niet laden. Controleer de console.";
+            }
+        }
+
+        // Stap 3: Vraag het onzichtbare iframe om een nieuwe willekeurige zin te maken
+        function genereerTekst() {
+            if (!generatorIframe) return;
+
+            // Perchance slaat zijn data op in het 'window.root' object van de pagina
+            const perchanceWindow = generatorIframe.contentWindow;
+            
+            if (perchanceWindow.root && perchanceWindow.root.output) {
+                // Genereer de tekst en update het scherm
+                const resultaat = perchanceWindow.root.output.toString();
+                document.getElementById('output').innerText = resultaat;
+            } else {
+                document.getElementById('output').innerText = "Fout: 'output' lijst niet gevonden in deze generator.";
+            }
+        }
+
+        // Start het laadproces direct
+        laadGenerator();
+    </script>
+
+</body>
+</html>
