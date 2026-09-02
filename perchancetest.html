@@ -3,89 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perchance API op GitHub Pages</title>
+    <title>Mijn Perchance Generator op GitHub Pages</title>
     <style>
         body { font-family: Arial, sans-serif; max-width: 500px; margin: 50px auto; text-align: center; padding: 20px; }
         button { padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #28a745; color: white; border: none; border-radius: 4px; }
-        button:disabled { background-color: #ccc; }
         #output { margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9; min-height: 40px; font-size: 18px; }
+        iframe { display: none; }
     </style>
 </head>
 <body>
 
     <h1>Perchance & GitHub Pages</h1>
-    <p>Geladen via de officiële Perchance JSONP-methode (Geen proxy nodig!).</p>
+    <p>Succesvol geladen via een lokaal logica-bestand!</p>
 
-    <button id="genereerKnop" onclick="genereerTekst()" disabled>Laden van Perchance...</button>
-    <div id="output">De tekst verschijnt hier...</div>
+    <button id="genereerKnop" onclick="genereerTekst()">🎲 Genereer Tekst</button>
+    <div id="output">Klik op de knop om te starten...</div>
+
+    <!-- We laden hier het handmatig gedownloade bestand in -->
+    <iframe id="logicaIframe" src="generator-logica.html"></iframe>
 
     <script>
-        // Vul hier de naam van jouw gewenste Perchance generator in
-        const generatorNaam = "animal-sentence"; 
-
-        let generatorLijsten = null;
-
-        // Deze functie wordt AUTOMATISCH aangeroepen zodra Perchance de data terugstuurt
-        window.ontvangPerchanceData = function(data) {
-            generatorLijsten = data;
-            
-            // Activeer de knop
-            const knop = document.getElementById('genereerKnop');
-            knop.disabled = false;
-            knop.innerText = "🎲 Genereer Tekst";
-            document.getElementById('output').innerText = "Generator succesvol geladen!";
-        };
-
-        // We laden de generator via een script-tag (dit omzeilt alle CORS-blokkades)
-        function laadGeneratorViaJsonp() {
-            const script = document.createElement('script');
-            // We vragen Perchance om de data te verpakken in onze 'ontvangPerchanceData' functie
-            script.src = `https://perchance.org{generatorNaam}&callback=ontvangPerchanceData`;
-            
-            script.onerror = function() {
-                document.getElementById('output').innerText = "Fout: Kon de generator niet ophalen van Perchance.";
-            };
-
-            document.body.appendChild(script);
-        }
-
         function genereerTekst() {
-            if (!generatorLijsten || !generatorLijsten.lists) return;
+            const iframe = document.getElementById('logicaIframe');
+            
+            // Controleer of het iframe en de Perchance-structuur (window.root) klaarstaan
+            if (iframe && iframe.contentWindow && iframe.contentWindow.root) {
+                const root = iframe.contentWindow.root;
+                let resultaat = "";
 
-            const lijsten = generatorLijsten.lists;
-            let resultaat = "";
-
-            // Perchance text-generators kiezen standaard uit de 'output' of 'main' lijst
-            if (lijsten.output) {
-                resultaat = kiesWillekeurig(lijsten.output);
-            } else if (lijsten.main) {
-                resultaat = kiesWillekeurig(lijsten.main);
-            } else {
-                // Pak de allereerste lijst die beschikbaar is als fallback
-                const sleutels = Object.keys(lijsten);
-                if (sleutels.length > 0) {
-                    resultaat = kiesWillekeurig(lijsten[sleutels[0]]);
+                // Zoek naar de tekstlijst binnen de gedownloade generator
+                if (root.output) {
+                    resultaat = root.output.toString();
+                } else if (root.main) {
+                    resultaat = root.main.toString();
+                } else {
+                    // Fallback naar de allereerste beschikbare lijst
+                    const beschikbareLijsten = Object.keys(root).filter(key => typeof root[key] === 'object');
+                    if (beschikbareLijsten.length > 0) {
+                        resultaat = root[beschikbareLijsten[0]].toString();
+                    }
                 }
+
+                document.getElementById('output').innerText = resultaat || "Geen tekst gevonden.";
+            } else {
+                document.getElementById('output').innerText = "Fout: De generator-logica is nog aan het laden...";
             }
-
-            document.getElementById('output').innerText = resultaat;
         }
-
-        // Helper-functie om een willekeurig item uit de Perchance-lijst-array te vissen
-        function kiesWillekeurig(lijstArray) {
-            if (!Array.isArray(lijstArray)) return String(lijstArray);
-            
-            // Filter lege regels of meta-data eruit
-            const opgeschoondeLijst = lijstArray.filter(item => item && typeof item === 'string');
-            
-            if (opgeschoondeLijst.length === 0) return "Lege lijst";
-            const willekeurigeIndex = Math.floor(Math.random() * opgeschoondeLijst.length);
-            
-            return opgeschoondeLijst[willekeurigeIndex];
-        }
-
-        // Start het inladen direct zodra de pagina opent
-        laadGeneratorViaJsonp();
     </script>
 
 </body>
