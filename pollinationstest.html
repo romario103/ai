@@ -31,54 +31,51 @@
     </div>
 
     <script>
-        async function stuurVraag() {
-            const inputVeld = document.getElementById('vraagInput');
-            const verzendKnop = document.getElementById('verzendKnop');
-            const chatbox = document.getElementById('chatbox');
-            
-            const gebruikersVraag = inputVeld.value.trim();
-            if (!gebruikersVraag) return;
+async function stuurVraag() {
+    const inputVeld = document.getElementById('vraagInput');
+    const verzendKnop = document.getElementById('verzendKnop');
+    const chatbox = document.getElementById('chatbox');
+    
+    const gebruikersVraag = inputVeld.value.trim();
+    if (!gebruikersVraag) return;
 
-            // 1. Toon de vraag van de gebruiker in de chatbox
-            chatbox.innerHTML += `<div class="bericht gebruiker">${gebruikersVraag}</div>`;
-            inputVeld.value = ''; // Maak invoerveld leeg
-            chatbox.scrollTop = chatbox.scrollHeight; // Scroll naar beneden
+    // 1. Toon de vraag van de gebruiker
+    chatbox.innerHTML += `<div class="bericht gebruiker">${gebruikersVraag}</div>`;
+    inputVeld.value = '';
+    chatbox.scrollTop = chatbox.scrollHeight;
 
-            // Zet de knop op 'laden'
-            verzendKnop.disabled = true;
-            verzendKnop.innerText = "...";
+    verzendKnop.disabled = true;
+    verzendKnop.innerText = "...";
 
-            // 2. Maak een 'Typen...' bericht aan voor de AI
-            const aiBerichtDiv = document.createElement('div');
-            aiBerichtDiv.className = 'bericht ai';
-            aiBerichtDiv.innerText = 'AI is aan het nadenken...';
-            chatbox.appendChild(aiBerichtDiv);
-            chatbox.scrollTop = chatbox.scrollHeight;
+    // 2. Maak 'Typen...' bericht
+    const aiBerichtDiv = document.createElement('div');
+    aiBerichtDiv.className = 'bericht ai';
+    aiBerichtDiv.innerText = 'AI is aan het nadenken...';
+    chatbox.appendChild(aiBerichtDiv);
+    chatbox.scrollTop = chatbox.scrollHeight;
 
-            try {
-                // 3. Vraag het antwoord aan de gratis openbare AI API
-                // We sturen de vraag mee in de URL en vragen specifiek om een antwoord in het Nederlands
-                const prompt = `Beantwoord de volgende vraag in het Nederlands: ${gebruikersVraag}`;
-                const apiUrl = `https://pollinations.ai{encodeURIComponent(prompt)}`;
-                
-                const response = await fetch(apiUrl);
-                if (!response.ok) throw new Error("API fout");
-                
-                const aiAntwoord = await response.text();
+    try {
+        // GEÜPDATE: We gebruiken nu het vernieuwde, stabielere endpoint van gen.pollinations.ai
+        const prompt = `Beantwoord de volgende vraag kort in het Nederlands: ${gebruikersVraag}`;
+        const apiUrl = `https://pollinations.ai{encodeURIComponent(prompt)}`;
+        
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error("API fout");
+        
+        const aiAntwoord = await response.text();
 
-                // 4. Toon het echte antwoord
-                aiBerichtDiv.innerText = aiAntwoord;
+        // 4. Toon het antwoord
+        aiBerichtDiv.innerText = aiAntwoord;
 
-            } catch (error) {
-                console.error(error);
-                aiBerichtDiv.innerText = 'Oeps! Er ging iets mis met de verbinding naar de AI.';
-            } finally {
-                // Herstel de verzendknop
-                verzendKnop.disabled = false;
-                verzendKnop.innerText = "Verzend";
-                chatbox.scrollTop = chatbox.scrollHeight;
-            }
-        }
+    } catch (error) {
+        console.error(error);
+        aiBerichtDiv.innerText = 'Oeps! De AI-server kon niet worden bereikt. Controleer je internet of adblocker.';
+    } finally {
+        verzendKnop.disabled = false;
+        verzendKnop.innerText = "Verzend";
+        chatbox.scrollTop = chatbox.scrollHeight;
+    }
+}
     </script>
 
 </body>
