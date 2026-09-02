@@ -21,61 +21,75 @@
     <div id="output">De tekst verschijnt hier...</div>
 
     <script>
-        // De naam van de generator die je wilt gebruiken op perchance.org
-        const generatorNaam = "animal-sentence"; 
+const generatorNaam = "animal-sentence"; 
+
+const proxyUrl = "https://allorigins.win";
+const perchanceUrl = `https://perchance.org{generatorNaam}`;
+
+let generatorIframe = null;
+
+async function laadGenerator() {
+    try {
+        const response = await fetch(proxyUrl + encodeURIComponent(perchanceUrl));
+        if (!response.ok) throw new Error("Netwerkrespons was niet ok");
         
-        // We gebruiken een gratis CORS proxy om de Perchance beveiliging in de browser te omzeilen
-        const proxyUrl = "https://corsproxy.io?";
-        const perchanceUrl = `https://perchance.org/api/downloadGenerator?generatorName=${generatorNaam}`;
+        const htmlCode = await response.text();
 
-        let generatorIframe = null;
+        generatorIframe = document.createElement('iframe');
+        generatorIframe.style.display = 'none';
+        document.body.appendChild(generatorIframe);
 
-        // Stap 1: Haal de generatorcode op zodra de pagina laadt
-        async function laadGenerator() {
-            try {
-                const response = await fetch(proxyUrl + encodeURIComponent(perchanceUrl));
-                const htmlCode = await response.text();
+        const iframeDoc = generatorIframe.contentWindow.document;
+        iframeDoc.open();
+        iframeDoc.write(htmlCode);
+        iframeDoc.close();
 
-                // Stap 2: We stoppen de gedownloade code in een onzichtbaar iframe.
-                // Dit zorgt ervoor dat de scripts van Perchance veilig kunnen draaien.
-                generatorIframe = document.createElement('iframe');
-                generatorIframe.style.display = 'none';
-                document.body.appendChild(generatorIframe);
+        document.getElementById('genereerKnop').disabled = false;
+        document.getElementById('genereerKnop').innerText = "🎲 Genereer Tekst";
+        document.getElementById('output').innerText = "Klaar voor gebruik!";
 
-                const iframeDoc = generatorIframe.contentWindow.document;
-                iframeDoc.open();
-                iframeDoc.write(htmlCode);
-                iframeDoc.close();
+    } catch (error) {
+        console.error("Fout bij laden:", error);
+        document.getElementById('output').innerText = "Fout bij inladen. Zorg dat je de pagina via een lokale server (localhost) draait.";
+    }
+}
 
-                // Activeer de knop zodra de generator in de achtergrond klaarstaat
-                document.getElementById('genereerKnop').disabled = false;
-                document.getElementById('genereerKnop').innerText = "🎲 Genereer Tekst";
-                document.getElementById('output').innerText = "Klaar voor gebruik!";
+function genereerTekst() {
+    if (!generatorIframe) return;
 
-            } catch (error) {
-                console.error("Fout bij laden:", error);
-                document.getElementById('output').innerText = "Kon de generator niet laden. Controleer de console.";
+    const perchanceWindow = generatorIframe.contentWindow;
+    
+    // Controleer of de Perchance data-structuur ('root') correct is ingeladen
+    if (perchanceWindow.root) {
+        const root = perchanceWindow.root;
+        let resultaat = "";
+
+        // We zoeken flexibel naar de lijstnaam omdat makers hun lijsten zelf mogen benoemen
+        if (root.output) {
+            resultaat = root.output.toString();
+        } else if (root.main) {
+            resultaat = root.main.toString();
+        } else if (root[generatorNaam]) {
+            resultaat = root[generatorNaam].toString();
+        } else {
+            // Als we niks vinden, tonen we de eerste beschikbare lijst die tekst bevat
+            const beschikbareLijsten = Object.keys(root).filter(key => typeof root[key] === 'object');
+            if (beschikbareLijsten.length > 0) {
+                resultaat = root[beschikbareLijsten[0]].toString();
             }
         }
 
-        // Stap 3: Vraag het onzichtbare iframe om een nieuwe willekeurige zin te maken
-        function genereerTekst() {
-            if (!generatorIframe) return;
-
-            // Perchance slaat zijn data op in het 'window.root' object van de pagina
-            const perchanceWindow = generatorIframe.contentWindow;
-            
-            if (perchanceWindow.root && perchanceWindow.root.output) {
-                // Genereer de tekst en update het scherm
-                const resultaat = perchanceWindow.root.output.toString();
-                document.getElementById('output').innerText = resultaat;
-            } else {
-                document.getElementById('output').innerText = "Fout: 'output' lijst niet gevonden in deze generator.";
-            }
+        if (resultaat) {
+            document.getElementById('output').innerText = resultaat;
+        } else {
+            document.getElementById('output').innerText = "Fout: Geen bruikbare tekstlijst gevonden in deze specifieke generator.";
         }
+    } else {
+        document.getElementById('output').innerText = "Fout: Perchance logica kon niet worden uitgelezen.";
+    }
+}
 
-        // Start het laadproces direct
-        laadGenerator();
+laadGenerator();
     </script>
 
 </body>
