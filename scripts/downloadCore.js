@@ -5,7 +5,6 @@ const { execFile } = require('child_process');
 // ============================================================
 // === CONFIGURATIE INLEZEN ===================================
 // ============================================================
-// Eén niveau hoger dan de scripts-map: daar staat config.json.
 
 const ROOT_DIR      = path.join(__dirname, '..');
 const CONFIG_FILE   = path.join(ROOT_DIR, 'config.json');
@@ -14,8 +13,13 @@ function leesConfig() {
     try {
         const raw = fs.readFileSync(CONFIG_FILE, 'utf8');
         const cfg = JSON.parse(raw);
-        if (!cfg.chromePad || !cfg.chromeProfiel || !cfg.ahkPad) {
-            throw new Error('config.json mist één of meer vereiste velden (chromePad, chromeProfiel, ahkPad)');
+        if (!cfg.chromePad || !cfg.chromeProfiel || !cfg.ahkPad || !cfg.site) {
+            throw new Error('config.json mist één of meer vereiste velden');
+        }
+        const s = cfg.site;
+        if (!s.naam || !s.startUrl || !s.tabbladUrlPrefix || !s.responsePrefix
+            || !s.vensterTitel || !s.focusScript || !s.plakScript) {
+            throw new Error('config.json mist één of meer vereiste site-velden');
         }
         return cfg;
     } catch (e) {
@@ -38,29 +42,16 @@ const LOG_FILE      = path.join(ROOT_DIR, 'log.txt');
 const AHK_EXE = CONFIG.ahkPad;
 
 // ============================================================
-// === SITE-SPECIFIEKE INSTELLINGEN ===========================
+// === SITE-SPECIFIEKE INSTELLINGEN (uit config.json) =========
 // ============================================================
-// Kies één site door het bijbehorende blok te activeren
-// (verwijder de // aan het begin van elke regel) en de andere
-// blokken uitgecommentarieerd te laten.
-//
-// LET OP: het focus-script wordt NIET hier gebruikt, maar in
-// start_chrome.bat. Dat draait eenmalig bij het opstarten,
-// niet per prompt.
 
-// --- Perchance (actief) ---
-const SITE_NAAM          = 'Perchance';
-const AHK_PLAK_SCRIPT    = path.join(HELPERS_DIR, 'perchance_plak.ahk');
-const AHK_FOCUS_SCRIPT   = path.join(HELPERS_DIR, 'perchance_focus.ahk');
-const RESPONSE_PREFIX    = 'https://image-generation.perchance.org/api/downloadTemporaryImageViaProxy';
-const TABBLAD_URL_PREFIX = 'https://perchance.org/';
-
-// --- Gemini (uit) ---
-// const SITE_NAAM          = 'Gemini';
-// const AHK_PLAK_SCRIPT    = path.join(HELPERS_DIR, 'gemini_plak.ahk');
-// const AHK_FOCUS_SCRIPT   = path.join(HELPERS_DIR, 'perchance_focus.ahk');
-// const RESPONSE_PREFIX    = 'https://gemini.google.com/api/...';
-// const TABBLAD_URL_PREFIX = 'https://gemini.google.com/';
+const SITE_NAAM            = CONFIG.site.naam;
+const START_URL            = CONFIG.site.startUrl;
+const TABBLAD_URL_PREFIX   = CONFIG.site.tabbladUrlPrefix;
+const RESPONSE_PREFIX      = CONFIG.site.responsePrefix;
+const VENSTER_TITEL        = CONFIG.site.vensterTitel;
+const AHK_FOCUS_SCRIPT     = path.join(ROOT_DIR, CONFIG.site.focusScript);
+const AHK_PLAK_SCRIPT      = path.join(ROOT_DIR, CONFIG.site.plakScript);
 
 // ============================================================
 // === ALGEMENE CONFIGURATIE ==================================
@@ -280,7 +271,6 @@ async function downloadCore(prompt, page, opts = {}) {
 }
 
 module.exports = {
-    // Configuratie
     CONFIG,
     CONFIG_FILE,
     ROOT_DIR,
@@ -290,11 +280,12 @@ module.exports = {
     AHK_EXE,
     CLIPBOARD_BAT,
     SITE_NAAM,
+    START_URL,
     TABBLAD_URL_PREFIX,
-    // Constanten
+    RESPONSE_PREFIX,
+    VENSTER_TITEL,
     MAX_POGINGEN,
     TIMEOUT_MS,
     SETTLE_TIME_MS,
-    // Hoofdfunctie
     downloadCore
 };

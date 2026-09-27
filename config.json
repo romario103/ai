@@ -2,10 +2,22 @@
   "chromeProfiel": "C:\\chrome-debug-profile",
   "chromePad": "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
   "ahkPad": "C:\\Program Files\\AutoHotkey\\v2\\AutoHotkey64.exe",
-  "rog": "==============================",
+
+  "site": {
+    "naam": "Perchance",
+    "startUrl": "https://perchance.org/cy59utrbbe",
+    "tabbladUrlPrefix": "https://perchance.org/",
+    "responsePrefix": "https://image-generation.perchance.org/api/downloadTemporaryImageViaProxy",
+    "vensterTitel": "AI Image Generator (free, no sign-up, unlimited)",
+    "focusScript": "helpers\\perchance_focus.ahk",
+    "plakScript": "helpers\\perchance_plak.ahk"
+  },
+
+  "rog": "===========ROG================",
   "rog_chromePad": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
   "rog_ahkPad": "C:\\Remy\\Applicaties\\AutoHotkey\\AutoHotkey64.exe",
-  "acer": "==============================",
+
+  "acer": "==========ACER===============",
   "acer_chromePad": "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
   "acer_ahkPad": "C:\\Program Files\\AutoHotkey\\v2\\AutoHotkey64.exe"
 }
