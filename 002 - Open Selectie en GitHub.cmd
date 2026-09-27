@@ -1,1 +1,1 @@
-powershell.exe -ExecutionPolicy Bypass -File "004 - Selectie script.ps1"
+powershell.exe -ExecutionPolicy Bypass -File "004 - Open Selectie en GitHub.ps1"

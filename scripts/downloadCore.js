@@ -1,24 +1,41 @@
-// scripts/downloadCore.js
-// Kern van het Perchance-downloadsysteem.
-// Roept AHK aan om een prompt te plakken, wacht op de gegenereerde afbeelding,
-// en geeft een resultaatobject terug.
-//
-// Aanname: het tekstvak in de pagina heeft altijd focus.
-// Het focussen gebeurt eenmalig in start_chrome.bat via een focus-AHK-script.
-
 const fs = require('fs');
 const path = require('path');
 const { execFile } = require('child_process');
 
 // ============================================================
-// === PADEN ==================================================
+// === CONFIGURATIE INLEZEN ===================================
 // ============================================================
-// Eén niveau hoger dan de scripts-map: daar staan helpers/, downloads/ en log.txt.
+// Eén niveau hoger dan de scripts-map: daar staat config.json.
 
 const ROOT_DIR      = path.join(__dirname, '..');
+const CONFIG_FILE   = path.join(ROOT_DIR, 'config.json');
+
+function leesConfig() {
+    try {
+        const raw = fs.readFileSync(CONFIG_FILE, 'utf8');
+        const cfg = JSON.parse(raw);
+        if (!cfg.chromePad || !cfg.chromeProfiel || !cfg.ahkPad) {
+            throw new Error('config.json mist één of meer vereiste velden (chromePad, chromeProfiel, ahkPad)');
+        }
+        return cfg;
+    } catch (e) {
+        console.error(`❌ Kon ${CONFIG_FILE} niet lezen: ${e.message}`);
+        process.exit(1);
+    }
+}
+
+const CONFIG = leesConfig();
+
+// ============================================================
+// === PADEN ==================================================
+// ============================================================
+
 const HELPERS_DIR   = path.join(ROOT_DIR, 'helpers');
 const DOWNLOADS_DIR = path.join(ROOT_DIR, 'downloads');
 const LOG_FILE      = path.join(ROOT_DIR, 'log.txt');
+
+// Uit config.json
+const AHK_EXE = CONFIG.ahkPad;
 
 // ============================================================
 // === SITE-SPECIFIEKE INSTELLINGEN ===========================
@@ -53,7 +70,6 @@ const MAX_POGINGEN   = 3;
 const TIMEOUT_MS     = 60000;
 const SETTLE_TIME_MS = 2000;
 
-const AHK_EXE       = 'C:\\Remy\\Applicaties\\AutoHotkey\\AutoHotkey64.exe';
 const CLIPBOARD_BAT = path.join(HELPERS_DIR, 'zet_klembord.bat');
 
 // ============================================================
@@ -265,6 +281,8 @@ async function downloadCore(prompt, page, opts = {}) {
 
 module.exports = {
     // Configuratie
+    CONFIG,
+    CONFIG_FILE,
     ROOT_DIR,
     HELPERS_DIR,
     DOWNLOADS_DIR,
