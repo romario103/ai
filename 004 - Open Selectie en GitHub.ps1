@@ -36,7 +36,7 @@ Start-Process $githubUrl
 
 # 2. Open de map in Windows Verkenner
 explorer.exe $doelmap
-Start-Sleep -Milliseconds 600 # Wacht tot Verkenner is geladen
+Start-Sleep -Milliseconds 2000 # Wacht tot Verkenner is geladen
 
 # 3. Koppel aan het Verkenner-venster, verplaats deze naar RECHTS, en maak de selectie
 $shell = New-Object -ComObject Shell.Application
