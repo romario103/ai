@@ -152,9 +152,9 @@ function maakBestandsnaam(prompt, contentType) {
 
 function eenPoging(prompt, page, { outputDir, timeoutMs, settleMs }) {
     return new Promise(async (resolve) => {
-        let opgeslagen      = null;      // bestandsnaam zodra opgeslagen
-        let verwerkBezig    = false;     // voorkomt dubbele verwerking van parallelle responses
-        let fase            = 'primair'; // 'primair' | 'settle-na-succes' | 'settle-na-timeout'
+        let opgeslagen      = null;
+        let verwerkBezig    = false;
+        let fase            = 'primair';
         let primaireTimer   = null;
         let settleTimer     = null;
         let klaar           = false;
@@ -175,13 +175,46 @@ function eenPoging(prompt, page, { outputDir, timeoutMs, settleMs }) {
                 if (!contentType.startsWith('image/')) return;
                 if (!response.ok()) return;
                 const url = response.url();
+
                 if (!url.startsWith(RESPONSE_PREFIX)) return;
 
-                // Al opgeslagen of al bezig? Negeer (settle-gedrag: extra's worden genegeerd)
                 if (opgeslagen || verwerkBezig) return;
 
                 verwerkBezig = true;
-                const buffer = await response.buffer();
+
+                // === AFBEELDING OPHALEN BINNEN DE BROWSERCONTEXT ===
+                let buffer;
+                try {
+                    const resultaat = await page.evaluate(async (imageUrl) => {
+                        const resp = await fetch(imageUrl);
+                        if (!resp.ok) {
+                            return { error: `status ${resp.status}` };
+                        }
+                        const blob = await resp.blob();
+                        return await new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                                const dataUrl = reader.result;
+                                const komma = dataUrl.indexOf(',');
+                                resolve({ base64: dataUrl.substring(komma + 1) });
+                            };
+                            reader.onerror = () => reject(new Error('FileReader-fout'));
+                            reader.readAsDataURL(blob);
+                        });
+                    }, url);
+
+                    if (resultaat.error) {
+                        log(`⚠️  Browser-fetch gaf status ${resultaat.error}`);
+                        verwerkBezig = false;
+                        return;
+                    }
+                    buffer = Buffer.from(resultaat.base64, 'base64');
+                } catch (fetchErr) {
+                    log(`⚠️  Ophalen mislukt: ${fetchErr.message}`);
+                    verwerkBezig = false;
+                    return;
+                }
+
                 const bestandsnaam = maakBestandsnaam(prompt, contentType);
                 fs.writeFileSync(path.join(outputDir, bestandsnaam), buffer);
                 opgeslagen = bestandsnaam;
@@ -189,14 +222,12 @@ function eenPoging(prompt, page, { outputDir, timeoutMs, settleMs }) {
                 log(`💾 Opgeslagen: ${bestandsnaam} (${(buffer.length / 1024).toFixed(1)} KB)`);
 
                 if (fase === 'primair') {
-                    // Primaire fase succes: wacht settleMs om extra afbeeldingen te negeren
                     if (primaireTimer) { clearTimeout(primaireTimer); primaireTimer = null; }
                     fase = 'settle-na-succes';
                     settleTimer = setTimeout(() => {
                         afronden({ status: 'SUCCESS', bestand: opgeslagen });
                     }, settleMs);
                 } else if (fase === 'settle-na-timeout') {
-                    // Late afbeelding tijdens settle-periode na timeout: toch succes
                     afronden({ status: 'SUCCESS', bestand: opgeslagen });
                 }
             } catch (e) {
@@ -204,19 +235,13 @@ function eenPoging(prompt, page, { outputDir, timeoutMs, settleMs }) {
             }
         };
 
-        // Eerst listener opzetten, dan plakken — anders kan de response gemist worden
         page.on('response', handler);
 
         try {
-            // Focus: venster naar voren (idempotent, geen Tabben)
             await runAhkScript(AHK_FOCUS_SCRIPT);
             await wait(150);
-
-            // Klembord vullen
             await zetKlembord(prompt);
             await wait(200);
-
-            // Plakken
             await runAhkScript(AHK_PLAK_SCRIPT);
         } catch (e) {
             log(`❌ Fout bij plakken: ${e.message}`);
@@ -224,7 +249,6 @@ function eenPoging(prompt, page, { outputDir, timeoutMs, settleMs }) {
             return;
         }
 
-        // Primaire timeout starten
         primaireTimer = setTimeout(() => {
             if (klaar) return;
             fase = 'settle-na-timeout';

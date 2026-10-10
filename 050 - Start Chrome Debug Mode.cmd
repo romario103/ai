@@ -24,7 +24,7 @@ start "" "%CHROME_PAD%" ^
 echo === Herschik nu de Windows... ===
 pause
 
-echo === Focus op de pagina zetten... ===
-"%AHK_PAD%" "%~dp0%FOCUS_SCRIPT%"
+REM echo === Focus op de pagina zetten... ===
+REM "%AHK_PAD%" "%~dp0%FOCUS_SCRIPT%"
 
 endlocal

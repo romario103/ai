@@ -20,6 +20,10 @@ async function verbindMetChrome() {
     }
 }
 
+function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 // === TABBLAD ZOEKEN ===
 async function zoekTabblad(browser) {
     const pages = await browser.pages();
@@ -45,10 +49,8 @@ async function zoekTabblad(browser) {
     }
 
     console.log(`[${SITE_NAAM}] Prompt: "${prompt}"`);
-
     const browser = await verbindMetChrome();
     const page = await zoekTabblad(browser);
-
     const resultaat = await downloadCore(prompt, page);
 
     await browser.disconnect();

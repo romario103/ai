@@ -1,7 +1,7 @@
 {
   "chromeProfiel": "C:\\chrome-debug-profile",
-  "chromePad": "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
-  "ahkPad": "C:\\Program Files\\AutoHotkey\\v2\\AutoHotkey64.exe",
+  "chromePad": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+  "ahkPad": "C:\\Remy\\Applicaties\\AutoHotkey\\AutoHotkey64.exe",
 
   "site": {
     "naam": "Perchance",
@@ -10,14 +10,36 @@
     "responsePrefix": "https://image-generation.perchance.org/api/downloadTemporaryImageViaProxy",
     "vensterTitel": "AI Image Generator (free, no sign-up, unlimited)",
     "focusScript": "helpers\\perchance_focus.ahk",
-    "plakScript": "helpers\\perchance_plak.ahk"
+    "plakScript": "helpers\\algemeen_plak.ahk"
+  },
+
+  "googleFlow": "===========Google Flow================",
+  "googleFlow_site": {
+    "naam": "Google Flow",
+    "startUrl": "https://flow.google.com/project/df071ffd-6873-4196-93a3-35edd23aec75",
+    "tabbladUrlPrefix": "https://flow.google.com/",
+    "responsePrefix": "https://flow-content.google/image",
+    "vensterTitel": "Google Flow - FF - Karakters - Schuin (v1)",
+    "focusScript": "helpers\\googleFlow_focus.ahk",
+    "plakScript": "helpers\\algemeen_plak.ahk"
+  },
+
+  "perchance": "===========Perchance================",
+  "perchance_site": {
+    "naam": "Perchance",
+    "startUrl": "https://perchance.org/cy59utrbbe",
+    "tabbladUrlPrefix": "https://perchance.org/",
+    "responsePrefix": "https://image-generation.perchance.org/api/downloadTemporaryImageViaProxy",
+    "vensterTitel": "AI Image Generator (free, no sign-up, unlimited)",
+    "focusScript": "helpers\\perchance_focus.ahk",
+    "plakScript": "helpers\\algemeen_plak.ahk"
   },
 
   "rog": "===========ROG================",
   "rog_chromePad": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
   "rog_ahkPad": "C:\\Remy\\Applicaties\\AutoHotkey\\AutoHotkey64.exe",
 
-  "acer": "==========ACER===============",
+  "acer": "==========Acer===============",
   "acer_chromePad": "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
   "acer_ahkPad": "C:\\Program Files\\AutoHotkey\\v2\\AutoHotkey64.exe"
 }
